@@ -1,0 +1,347 @@
+<html>
+  <head>
+    <meta name="”robots”" content="”noindex”" />
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=yes"
+    />
+
+    <title>Колаборанти</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6.0"></script>
+    <!--     <script src="https://unpkg.com/axios/dist/axios.min.js"></script> -->
+  </head>
+
+  <body>
+    <div style="font-family: arial; padding-bottom: 15px">
+      На графіку показані середньотижнева кількість голосів за законопроекти в
+      другому читанні та цілому.
+      <span style="background: #7fcdbb; padding: 2px; border-radius: 4px"
+        >Зеленим</span
+      >
+      відтінком представлені голосування "Слуга народу",
+      <span style="background: #ddd; padding: 2px; border-radius: 4px"
+        >сірим</span
+      >
+      - разом "Голос", "ЄС" та "Батьківщина",
+      <span style="background: steelblue; padding: 2px; border-radius: 4px"
+        >синім</span
+      >
+      - "ОПЗЖ", "Довіра", "За майбутнє", а також створені в 2022 року
+      "Відновлення України" та "Платформа за життя і мир" (екс-"ОПЗЖ")
+    </div>
+    <div id="chart1"></div>
+
+    бла-бла-бла
+
+    <div class="multiCharts" id="multiCharts"></div>
+
+    <script>
+      d3.csv("data.csv").then(function (data_) {
+        ///////////////////////data///////////////////////////////
+
+        let frn = [
+          { frn: "Всі фракції і групи", fr: "" },
+          { frn: 'Фракція політичної партії "СЛУГА НАРОДУ"', fr: "sn" },
+          { frn: "Позафракційні", fr: "pz" },
+          {
+            frn: 'Фракція політичної партії "Європейська солідарність"',
+            fr: "es",
+          },
+          {
+            frn: 'Фракція політичної партії Всеукраїнське об’єднання "Батьківщина"',
+            fr: "bt",
+          },
+          { frn: 'Фракція політичної партії "ГОЛОС"', fr: "gl" },
+          {
+            frn: 'Фракція політичної партії "ОПОЗИЦІЙНА ПЛАТФОРМА-ЗА ЖИТТЯ"',
+            fr: "op",
+          },
+          { frn: 'Депутатська група "ДОВІРА"', fr: "dv" },
+          { frn: 'Депутатська група "Партія "За майбутнє"', fr: "zm" },
+          {
+            frn: 'Депутатська група "Платформа за життя та мир" у Верховній Раді України',
+            fr: "op",
+          },
+          {
+            frn: 'Депутатська група "Відновлення України" у Верховній Раді України',
+            fr: "zm",
+          },
+        ];
+
+        data_.forEach((d) => {
+          let find = frn.find((e) => e.frn == d.frn);
+          d.fr = find ? find.fr : null;
+        });
+
+        let data = data_.map((d) => {
+          return {
+            ...d,
+            law_name: d.law_name
+              .replace(/.+\sЗакону/, "ЗП")
+              .replace(
+                /про внесення змін до деяких законодавчих актів України/,
+                ""
+              ),
+            date: d3.timeParse("%d.%m.%Y")(d.date),
+          };
+        });
+
+        // console.log(data);
+
+        let orders = [
+          'Фракція політичної партії "СЛУГА НАРОДУ"',
+          "Позафракційні",
+          'Фракція політичної партії "Європейська солідарність"',
+          'Фракція політичної партії Всеукраїнське об’єднання "Батьківщина"',
+          'Фракція політичної партії "ГОЛОС"',
+          'Фракція політичної партії "ОПОЗИЦІЙНА ПЛАТФОРМА-ЗА ЖИТТЯ"',
+          'Депутатська група "ДОВІРА"',
+          'Депутатська група "Партія "За майбутнє"',
+          'Депутатська група "Платформа за життя та мир" у Верховній Раді України',
+          'Депутатська група "Відновлення України" у Верховній Раді України',
+        ];
+
+        ///////////////////////radaGolos///////////////////////////////
+
+        function radaGolos(data, annotation, width, marginRight) {
+          let screenWidth = screen.width;
+          let chart = Plot.plot({
+            marginLeft: 50,
+            marginBottom: annotation == 1 ? 50 : 0,
+            marginTop: screenWidth < 600 && annotation == 1 ? 60 : 40,
+            marginRight: marginRight,
+            height: width,
+            width: width,
+            style: {
+              fontSize: screenWidth < 600 && annotation == 1 ? "18px" : "12px",
+            },
+            y: {
+              type: "band",
+              axis: null,
+            },
+            x: {
+              domain: [0, 350],
+              axis: "top",
+              label: annotation == 1 ? "Кількість голосів" : "",
+              labelAnchor: "center",
+            },
+            color: {
+              // legend: true,
+              domain: orders,
+              range: [
+                "#7fcdbb",
+                "#ddd",
+                "#ddd",
+                "#ddd",
+                "#ddd",
+                "steelblue",
+                "steelblue",
+                "steelblue",
+                "steelblue",
+                "steelblue",
+              ],
+            },
+            marks: [
+              // Plot.frame(),
+              Plot.barX(
+                data.filter(
+                  (d) =>
+                    d.total > 150 &&
+                    (d.date < new Date("2021-08-01") ||
+                      d.date > new Date("2021-09-01"))
+                ),
+                Plot.binY(
+                  { x: "mean" },
+                  {
+                    y: (d) => d.date,
+                    x: "results",
+                    // curve: "basis"
+                    thresholds: d3.timeMonth,
+                    fill: "frn",
+                    inset: annotation == 1 ? -0.7 : -0.5,
+                    order: orders,
+                  }
+                )
+              ),
+              Plot.text(
+                [
+                  "Після виборів\nСлуга народу вистачало\nголосів (226 або більше)\nвласної монобільшості\nдля прийняття законів 🠢",
+                ],
+                {
+                  x: (d) => 80,
+                  textAnchor: "end",
+                  frameAnchor: "top",
+                  dx: 170,
+                  dy: 10,
+                  // y: [0.8, 0.1],
+                  text: (d) => d,
+                  opacity: annotation,
+                  // fill: "#333",
+                  // stroke: "#fff"
+                }
+              ),
+
+              Plot.text(
+                [
+                  "Але із розпадом уряду\nГончарука, відставкою\nреформаторів і covid-19\nвиникли проблеми →",
+                ],
+                {
+                  x: (d) => 80,
+                  textAnchor: "end",
+                  frameAnchor: "top",
+                  dx: 140,
+                  dy: 135,
+                  // y: [0.8, 0.1],
+                  text: (d) => d,
+                  opacity: annotation,
+                  // fill: "#333",
+                  // stroke: "#fff"
+                }
+              ),
+
+              Plot.text(
+                [
+                  `← Із великою\nвійною "слуги"\nстали ще більш\nзалежні від\nдупутатів екс-ОПЗЖ і\n партій "бізнесменів"`,
+                ],
+                {
+                  x: (d) => 70,
+                  textAnchor: "start",
+                  frameAnchor: "top",
+                  dx: 285,
+                  dy: 405,
+                  // y: [0.8, 0.1],
+                  text: (d) => d,
+                  opacity: annotation,
+                  // fill: "#333",
+                  // stroke: "#fff"
+                }
+              ),
+
+              Plot.text(["2020"], {
+                x: annotation == 1 ? -35 : -45,
+                textAnchor: "start",
+                frameAnchor: "top",
+                dx: 0,
+                dy: annotation == 1 ? 35 : 25,
+                // y: [0.8, 0.1],
+                text: (d) => d,
+                // opacity: annotation,
+                // stroke: "#fff"
+              }),
+              Plot.text(["2021"], {
+                x: annotation == 1 ? -35 : -45,
+                textAnchor: "start",
+                frameAnchor: "top",
+                dx: 0,
+                dy: annotation == 1 ? 185 : 90,
+                // y: [0.8, 0.1],
+                text: (d) => d,
+                // opacity: annotation,
+                // stroke: "#fff"
+              }),
+              Plot.text(["2022"], {
+                x: annotation == 1 ? -35 : -45,
+                textAnchor: "start",
+                frameAnchor: "top",
+                dx: 0,
+                dy: annotation == 1 ? 335 : 160,
+                // y: [0.8, 0.1],
+                text: (d) => d,
+                // opacity: annotation,
+                // stroke: "#fff"
+              }),
+              Plot.text(["2023"], {
+                x: annotation == 1 ? -35 : -45,
+                textAnchor: "start",
+                frameAnchor: "top",
+                dx: 0,
+                dy: annotation == 1 ? 475 : 240,
+                // y: [0.8, 0.1],
+                text: (d) => d,
+                // opacity: annotation,
+                // stroke: "#fff"
+              }),
+              Plot.ruleX([226], { strokeWidth: 1 }),
+            ],
+          });
+          return chart;
+          // document.getElementById("chart1").appendChild(chart);
+        }
+
+        document
+          .getElementById("chart1")
+          .appendChild(radaGolos(data, 1, 600, 110));
+
+        // console.log('chart',chart);
+        // updateRadaGolos(data,1)
+
+        ///////////////////////select///////////////////////////////
+
+        //         // add the options to the button
+        //         d3.select("#selectFrn")
+        //           .selectAll("myOptions")
+        //           .data(frn.slice(0, 9))
+        //           .enter()
+        //           .append("option")
+        //           .text(function (d) {
+        //             return d.frn;
+        //           }) // text showed in the menu
+        //           .attr("value", function (d) {
+        //             return d.fr;
+        //           });
+
+        //         d3.select("#selectFrn").on("change", function (event, d) {
+        //           // recover the option that has been chosen
+        //           const selectedOption = d3.select(this).property("value");
+        //           let data2 = data.filter((d) => d.fr != selectedOption);
+        //           console.log(data2);
+        //           d3.select("#chart svg").remove();
+        //           updateRadaGolos(data2);
+        //         });
+
+        //////////////////////////multiCharts/////////////////////////////
+
+        d3.select("#multiCharts")
+          .selectAll(".multiChart")
+          .data(frn.slice(1, 9))
+          .enter()
+          .append("div")
+          .attr("id", (d, i) => "multiChart" + i)
+          .attr("class", "multiChart")
+          .style("display", "inline-block")
+          .style("padding-top", "20px")
+          .append("div")
+          .style("width", "200px")
+          .style("font-family", "arial")
+          .style("font-size", "14px")
+          .style("padding-left", "45px")
+          .html(
+            (d) =>
+              "Без голосів: " +
+              d.frn
+                .slice(0, 100)
+                .replace(
+                  /Депутатська |Фракція політичної партії | у Верховній.+/g,
+                  ""
+                )
+          );
+
+        frn.slice(1, 9).map((e, i) => {
+          d3.select("multiChart" + i)
+            .append("text")
+            .html("tft");
+          document.getElementById("multiChart" + i).appendChild(
+            radaGolos(
+              data.filter((d) => d.fr != e.fr),
+              0,
+              300,
+              0
+            )
+          );
+        });
+      });
+    </script>
+  </body>
+</html>
