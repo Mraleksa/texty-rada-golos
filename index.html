@@ -14,8 +14,9 @@
   </head>
 
   <body>
+    
     <div style="font-family: arial; padding-bottom: 15px">
-      На графіку показані середньотижнева кількість голосів за законопроекти в
+      На графіку показані середньомісячна кількість голосів за законопроекти в
       другому читанні та цілому.
       <span style="background: #7fcdbb; padding: 2px; border-radius: 4px"
         >Зеленим</span
@@ -23,15 +24,22 @@
       відтінком представлені голосування "Слуга народу",
       <span style="background: #ddd; padding: 2px; border-radius: 4px"
         >сірим</span
+      > - мажоритарники.  Відтінком <span style="background: #fdae6b; padding: 2px; border-radius: 4px"
+        >оранжевого</span
       >
-      - разом "Голос", "ЄС" та "Батьківщина",
+      - три партії разом: "Голос", "ЄС" та "Батьківщина".
       <span style="background: steelblue; padding: 2px; border-radius: 4px"
-        >синім</span
+        >Синім</span
       >
       - "ОПЗЖ", "Довіра", "За майбутнє", а також створені в 2022 року
       "Відновлення України" та "Платформа за життя і мир" (екс-"ОПЗЖ")
     </div>
+    <div style=" display: flex;
+  align-items: center;
+  justify-content: center;  ">
     <div id="chart1"></div>
+      
+    </div>
 
     бла-бла-бла
 
@@ -133,9 +141,9 @@
               range: [
                 "#7fcdbb",
                 "#ddd",
-                "#ddd",
-                "#ddd",
-                "#ddd",
+                "#fdae6b",
+                "#fdae6b",
+                "#fdae6b",
                 "steelblue",
                 "steelblue",
                 "steelblue",
@@ -305,7 +313,7 @@
 
         d3.select("#multiCharts")
           .selectAll(".multiChart")
-          .data(frn.slice(1, 9))
+          .data(frn.slice(2, 9))
           .enter()
           .append("div")
           .attr("id", (d, i) => "multiChart" + i)
@@ -319,7 +327,7 @@
           .style("padding-left", "45px")
           .html(
             (d) =>
-              "Без голосів: " +
+              '"Слуги" + ' +
               d.frn
                 .slice(0, 100)
                 .replace(
@@ -328,13 +336,14 @@
                 )
           );
 
-        frn.slice(1, 9).map((e, i) => {
+        frn.slice(2, 9).map((e, i) => {
+          // console.log(data)
           d3.select("multiChart" + i)
             .append("text")
             .html("tft");
           document.getElementById("multiChart" + i).appendChild(
             radaGolos(
-              data.filter((d) => d.fr != e.fr),
+              data.filter((d) => d.fr == 'sn' || d.fr == e.fr),
               0,
               300,
               0
